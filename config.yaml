@@ -1,0 +1,66 @@
+# ============================================================
+# Central configuration for the malware-detection project.
+# Change paths/hyperparameters here instead of inside the code.
+# ============================================================
+
+# Select dataset: "malware-analyze" | "mal-api-2019"
+dataset: "malware-analyze"
+
+# Classifier for stage 2.  Available options (any dataset):
+#   "logreg"    — sklearn.LogisticRegression + GridSearchCV
+#   "svc"       — sklearn.SVC + GridSearchCV
+#   "pytorch"   — PyTorch LinearClassifier (nn.Linear, Adam)
+classifier_type: "logreg"
+
+data:
+  # ----- malware-analyze (CSV: API call counts, label=malware) -----
+  malware-analyze:
+    raw_csv_path: "data/raw/dynamic_api_call_sequence_per_malware_100_0_306.csv"
+    label_column: "malware"
+    drop_columns: ["hash", "malware"]
+    num_classes: 2
+
+  # ----- mal-api-2019 (raw text sequences + TF-IDF, 8 malware families) -----
+  mal-api-2019:
+    raw_text_path: "data/raw/all_analysis_data.txt"
+    labels_path: "data/raw/labels.csv"
+    tfidf_embedding_path: "data/processed/tfidf_embedding.npz"
+    num_classes: 8
+
+  test_size: 0.2
+  val_size: 0.5
+  random_state: 42
+
+tfidf:
+  # mal-api-2019 used ngram_range=(3,5); you can override per run
+  ngram_range: [3, 3]
+  smooth_idf: true
+  norm: "l2"
+  sublinear_tf: true
+  max_df: 0.9
+
+model:
+  hidden_dim: 128
+  projection_dim: 128
+
+training:
+  supcon:
+    epochs: 100
+    batch_size: 32
+    learning_rate: 0.001
+    temperature: 0.07
+    noise_std: 0.05
+  classifier:
+    epochs: 100
+    batch_size: 32
+    learning_rate: 0.0001
+
+paths:
+  checkpoint_dir: "checkpoints"
+  encoder_checkpoint: "checkpoints/supcon_encoder.pth"
+  classifier_checkpoint: "checkpoints/classifier.pth"
+  figures_dir: "results/figures"
+  tables_dir: "results/tables"
+
+seed: 42
+device: "auto"   # "auto" | "cuda" | "cpu"
